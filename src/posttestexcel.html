@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-test: Maestría en Excel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        q: {
+                            bg: '#080d0b',
+                            card: '#0f1a15',
+                            border: '#1a2e24',
+                            text: '#e8f0ec',
+                            muted: '#5a7d6c',
+                            accent: '#00e676',
+                            gold: '#ffab00',
+                            danger: '#ff5252',
+                            dark: '#060a08',
+                            deep: '#0a120e'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Cinzel', 'serif'],
+                        body: ['Source Sans 3', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #080d0b;
+            color: #e8f0ec;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+
+        .font-display { font-family: 'Cinzel', serif; }
+
+        .option-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .option-card:hover:not(.disabled) {
+            background-color: #1a2e24;
+            border-color: #00e676;
+            transform: translateX(5px);
+        }
+
+        .option-card.correct {
+            background-color: rgba(0, 230, 118, 0.1);
+            border-color: #00e676;
+        }
+
+        .option-card.incorrect {
+            background-color: rgba(255, 82, 82, 0.1);
+            border-color: #ff5252;
+        }
+
+        .progress-bar {
+            transition: width 0.4s ease;
+        }
+
+        .medieval-border {
+            border: 2px solid #1a2e24;
+            position: relative;
+        }
+
+        .medieval-border::before, .medieval-border::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffab00;
+            border: 1px solid #000;
+        }
+
+        .medieval-border::before { top: -5px; left: -5px; }
+        .medieval-border::after { bottom: -5px; right: -5px; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .certificate-print { display: block !important; }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+
+    <div id="app" class="w-full max-w-3xl no-print">
+        <!-- Pantalla de Inicio -->
+        <div id="start-screen" class="text-center space-y-6">
+            <div class="mb-8">
+                <i class="fa-solid fa-crown text-5xl text-q-gold mb-4 animate-bounce"></i>
+                <h1 class="text-4xl md:text-5xl font-display font-black text-q-gold uppercase tracking-widest">Post-test de Maestría</h1>
+                <p class="text-q-muted mt-2 text-lg">Demuestra lo aprendido en la travesía de Excel Quest</p>
+            </div>
+            
+            <div class="bg-q-card border border-q-border p-6 rounded-xl text-left medieval-border">
+                <h2 class="font-display text-xl text-q-accent mb-4">La Prueba Final:</h2>
+                <p class="mb-4 text-q-muted text-sm italic">Has recorrido los 8 reinos del conocimiento. Ahora, enfrenta este último desafío para validar tus nuevas habilidades.</p>
+                <ul class="space-y-3 text-q-text">
+                    <li><i class="fa-solid fa-bolt text-q-gold mr-2"></i> 10 Preguntas de nivel intermedio/avanzado.</li>
+                    <li><i class="fa-solid fa-bolt text-q-gold mr-2"></i> Evaluación de funciones lógicas y búsqueda.</li>
+                    <li><i class="fa-solid fa-bolt text-q-gold mr-2"></i> Validarás tu rango como Maestro de la Hoja.</li>
+                </ul>
+            </div>
+
+            <button onclick="startQuiz()" class="bg-q-accent hover:bg-green-400 text-q-bg font-display font-bold py-4 px-12 rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(0,230,118,0.3)]">
+                INICIAR EVALUACIÓN FINAL
+            </button>
+        </div>
+
+        <!-- Pantalla de Preguntas -->
+        <div id="quiz-screen" class="hidden">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <span id="current-index" class="text-q-gold font-display text-2xl">01</span>
+                    <span class="text-q-muted font-display text-lg">/ 10</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-q-muted uppercase tracking-widest">Puntos de Habilidad</span>
+                    <div id="score-display" class="text-q-accent font-display text-xl">0</div>
+                </div>
+            </div>
+
+            <div class="w-full bg-q-deep h-2 rounded-full mb-8 overflow-hidden border border-q-border">
+                <div id="progress-fill" class="progress-bar bg-q-accent h-full w-0 shadow-[0_0_10px_#00e676]"></div>
+            </div>
+
+            <div class="bg-q-card border border-q-border p-6 md:p-8 rounded-2xl mb-6">
+                <h2 id="question-text" class="text-xl md:text-2xl font-semibold leading-relaxed mb-8"></h2>
+                <div id="options-container" class="space-y-3"></div>
+                <div id="feedback-area" class="hidden mt-6 p-4 rounded-xl border animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <p id="feedback-text" class="text-sm italic"></p>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-q-accent hover:bg-green-400 text-q-bg font-display font-bold py-3 px-8 rounded-lg transition-all flex items-center">
+                    CONTINUAR <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Resultados -->
+        <div id="result-screen" class="hidden text-center">
+            <div class="bg-q-card border-2 border-q-gold p-8 rounded-3xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-q-gold shadow-[0_0_15px_#ffab00]"></div>
+                
+                <div id="trophy-container" class="mb-6"></div>
+                <h2 id="result-title" class="text-3xl font-display font-bold mb-2">Evaluación Terminada</h2>
+                <p id="result-subtitle" class="text-q-muted mb-8">Has completado el ciclo de aprendizaje</p>
+
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-q-bg border border-q-border p-4 rounded-2xl">
+                        <div id="final-score" class="text-4xl font-bold text-q-accent">0</div>
+                        <div class="text-xs text-q-muted uppercase mt-1">Aciertos</div>
+                    </div>
+                    <div class="bg-q-bg border border-q-border p-4 rounded-2xl">
+                        <div id="final-percentage" class="text-4xl font-bold text-q-gold">0%</div>
+                        <div class="text-xs text-q-muted uppercase mt-1">Maestría</div>
+                    </div>
+                </div>
+
+                <div id="result-message" class="text-lg text-q-text mb-8 italic"></div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="location.reload()" class="border-2 border-q-muted text-q-muted hover:border-q-text hover:text-q-text font-display font-bold py-3 px-8 rounded-full transition-all">
+                        REPASAR
+                    </button>
+                    <button onclick="generateCertificate()" id="cert-btn" class="bg-q-gold text-q-bg font-display font-bold py-3 px-10 rounded-full transition-all shadow-[0_0_15px_rgba(255,171,0,0.4)]">
+                        GENERAR CERTIFICADO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Nombre -->
+    <div id="name-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 no-print">
+        <div class="bg-q-card border border-q-gold p-8 rounded-2xl max-w-sm w-full text-center">
+            <h3 class="font-display text-xl text-q-gold mb-4">NOMBRE DEL MAESTRO</h3>
+            <p class="text-q-muted text-sm mb-6">Ingresa tu nombre para el certificado oficial.</p>
+            <input type="text" id="user-name" placeholder="Tu nombre aquí..." class="w-full bg-q-bg border border-q-border p-3 rounded-lg text-q-text mb-6 focus:border-q-gold outline-none">
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-2 text-q-muted">CANCELAR</button>
+                <button onclick="printCertificate()" class="flex-1 py-2 bg-q-gold text-q-bg font-bold rounded-lg">VER Y GUARDAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista Previa Certificado (Para Impresión) -->
+    <div id="certificate-view" class="hidden certificate-print fixed inset-0 bg-white p-10 text-black flex-col items-center justify-center border-[20px] border-double border-gray-200">
+        <div class="text-center max-w-3xl border-4 border-gray-100 p-12 relative">
+            <h1 class="font-display text-5xl mb-4" style="color: #000;">CERTIFICADO DE MAESTRÍA</h1>
+            <p class="text-xl uppercase tracking-widest mb-12">Excel Quest: El Dominio de la Hoja de Cálculo</p>
+            
+            <p class="text-lg italic mb-2">Se otorga con honor a:</p>
+            <h2 id="cert-user-name" class="font-display text-4xl border-b-2 border-black inline-block px-10 mb-12 py-2">NOMBRE DEL ESTUDIANTE</h2>
+            
+            <p class="text-lg leading-relaxed mb-12">
+                Por haber completado exitosamente la evaluación de post-test con un nivel de maestría del <span id="cert-percent" class="font-bold">0%</span>, demostrando habilidades avanzadas en el manejo de funciones lógicas, búsqueda de datos y análisis estructural en Microsoft Excel.
+            </p>
+            
+            <div class="flex justify-between items-end mt-16">
+                <div class="text-center">
+                    <div class="w-48 border-t border-black mb-2"></div>
+                    <p class="text-sm">Gran Maestro de Excel</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-display mb-2" id="cert-rank">RANGO</div>
+                    <p class="text-xs">Rango Obtenido</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-48 border-t border-black mb-2"></div>
+                    <p class="text-sm">Fecha de Emisión</p>
+                </div>
+            </div>
+            
+            <div class="absolute top-0 right-0 opacity-10 text-8xl p-4">
+                <i class="fa-solid fa-award"></i>
+            </div>
+        </div>
+        <button onclick="window.location.reload()" class="no-print mt-10 bg-black text-white px-8 py-3 rounded-full font-bold">VOLVER</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "¿Cuál es la función correcta para buscar un valor en la primera columna de una tabla y devolver un dato de otra columna en la misma fila?",
+                options: [
+                    { text: "=BUSCAR(valor; tabla; columna)", correct: false, rationale: "BUSCAR es una función antigua y menos precisa para tablas estructuradas." },
+                    { text: "=BUSCARV(valor_buscado; matriz; indicador_columnas; [ordenado])", correct: true, rationale: "Es la función estándar para búsquedas verticales en tablas." },
+                    { text: "=COINCIDIR(valor; matriz; 0)", correct: false, rationale: "COINCIDIR devuelve la posición (número), no el valor de la celda." },
+                    { text: "=FILTRAR(tabla; condicion)", correct: false, rationale: "FILTRAR devuelve múltiples resultados, no una búsqueda de punto único." }
+                ]
+            },
+            {
+                question: "Tienes la fórmula =SI(A1>100; 'Alto'; 'Bajo'). Si A1 es exactamente 100, ¿qué resultado mostrará?",
+                options: [
+                    { text: "Alto", correct: false, rationale: "La condición es estrictamente 'mayor que' (>), no 'mayor o igual'." },
+                    { text: "Bajo", correct: true, rationale: "Como 100 no es mayor que 100, se ejecuta el argumento de falso." },
+                    { text: "Error #¡VALOR!", correct: false, rationale: "La sintaxis es correcta, por lo que no hay error." },
+                    { text: "100", correct: false, rationale: "La función SI devuelve uno de los dos textos definidos." }
+                ]
+            },
+            {
+                question: "¿Qué herramienta usarías para resumir miles de filas de datos en una tabla compacta con totales y promedios automáticos?",
+                options: [
+                    { text: "Filtros Avanzados", correct: false, rationale: "Los filtros solo ocultan datos, no crean resúmenes calculados." },
+                    { text: "Formato Condicional", correct: false, rationale: "Esta herramienta solo cambia la apariencia visual." },
+                    { text: "Tablas Dinámicas", correct: true, rationale: "Es la herramienta más poderosa para el análisis y resumen de grandes volúmenes de datos." },
+                    { text: "Validación de Datos", correct: false, rationale: "Sirve para controlar qué se escribe en las celdas." }
+                ]
+            },
+            {
+                question: "En la función =BUSCARV('Producto A'; A1:D50; 3; FALSO), ¿qué significa el parámetro 'FALSO'?",
+                options: [
+                    { text: "Que no importa si encuentra el valor.", correct: false, rationale: "El parámetro controla el tipo de coincidencia." },
+                    { text: "Que buscará una coincidencia exacta.", correct: true, rationale: "Asegura que solo traiga el dato si el nombre es idéntico." },
+                    { text: "Que la tabla está desordenada.", correct: false, rationale: "Aunque ayuda en tablas desordenadas, su función técnica es definir la coincidencia exacta." },
+                    { text: "Que la búsqueda es horizontal.", correct: false, rationale: "La orientación la define el nombre de la función (V de Vertical)." }
+                ]
+            },
+            {
+                question: "¿Cómo fijas una celda en una fórmula para que al arrastrarla hacia abajo no cambie su referencia?",
+                options: [
+                    { text: "Usando paréntesis: (A1).", correct: false, rationale: "Los paréntesis solo agrupan operaciones matemáticas." },
+                    { text: "Usando signos de dólar: $A$1.", correct: true, rationale: "El símbolo $ crea una referencia absoluta (anclaje)." },
+                    { text: "Escribiendo la celda en mayúsculas.", correct: false, rationale: "Excel no distingue entre mayúsculas y minúsculas en referencias." },
+                    { text: "Bloqueando la hoja de cálculo.", correct: false, rationale: "Eso impide editar celdas, no fija referencias en fórmulas." }
+                ]
+            },
+            {
+                question: "¿Qué hace la función =CONTAR.SI(A1:A10; '>50')?",
+                options: [
+                    { text: "Suma todos los números mayores a 50.", correct: false, rationale: "Para sumar se usaría la función SUMAR.SI." },
+                    { text: "Cuenta cuántas celdas en el rango tienen un valor superior a 50.", correct: true, rationale: "Es una función de conteo bajo condición." },
+                    { text: "Borra los valores menores a 50.", correct: false, rationale: "Las funciones nunca borran datos de otras celdas." },
+                    { text: "Muestra el número 50 en todas las celdas.", correct: false, rationale: "La función devuelve un único resultado numérico." }
+                ]
+            },
+            {
+                question: "Si quieres unir el texto de la celda A1 ('Hola') y B1 ('Mundo') con un espacio en medio, ¿cuál es la fórmula correcta?",
+                options: [
+                    { text: "=A1+B1", correct: false, rationale: "El signo + solo funciona para operaciones aritméticas." },
+                    { text: "=A1 & ' ' & B1", correct: true, rationale: "El ampersand (&) es el operador de concatenación en Excel." },
+                    { text: "=UNIR(A1; B1)", correct: false, rationale: "La función correcta sería CONCAT o UNIRCADENAS." },
+                    { text: "=A1-B1", correct: false, rationale: "Eso intentaría restar textos, dando un error #¡VALOR!." }
+                ]
+            },
+            {
+                question: "¿Cuál de estas opciones describe mejor la 'Validación de Datos'?",
+                options: [
+                    { text: "Comprobar si las fórmulas tienen errores.", correct: false, rationale: "Eso es 'Comprobación de errores'." },
+                    { text: "Restringir el tipo de datos o los valores que los usuarios pueden introducir en una celda.", correct: true, rationale: "Permite crear listas desplegables o límites numéricos." },
+                    { text: "Proteger el archivo con una contraseña.", correct: false, rationale: "Eso es 'Cifrar con contraseña' en el menú Archivo." },
+                    { text: "Asegurar que los datos se guarden en la nube.", correct: false, rationale: "Eso es el autoguardado de OneDrive." }
+                ]
+            },
+            {
+                question: "Para extraer el año de una fecha completa en la celda A1, ¿qué función usarías?",
+                options: [
+                    { text: "=FECHA(A1)", correct: false, rationale: "FECHA crea una fecha a partir de números, no extrae partes." },
+                    { text: "=AÑO(A1)", correct: true, rationale: "Devuelve el número del año de una fecha válida." },
+                    { text: "=TEXTO(A1; 'dia')", correct: false, rationale: "Eso devolvería el día, no el año." },
+                    { text: "=EXTRAE(A1; 1; 4)", correct: false, rationale: "Aunque podría funcionar si la fecha es texto, no es la forma correcta para formatos de fecha." }
+                ]
+            },
+            {
+                question: "¿Qué combinación de teclas permite insertar rápidamente una autosuma en una celda?",
+                options: [
+                    { text: "Alt + Shift + =", correct: true, rationale: "Es el atajo rápido para la función SUMA en la mayoría de teclados." },
+                    { text: "Ctrl + S", correct: false, rationale: "Suele usarse para subrayar o guardar, dependiendo del idioma." },
+                    { text: "Shift + Enter", correct: false, rationale: "Mueve el cursor hacia la celda superior." },
+                    { text: "F4", correct: false, rationale: "Se usa para repetir la última acción o cambiar tipos de referencia." }
+                ]
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let canAnswer = true;
+        let finalRank = "";
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            canAnswer = true;
+            const q = quizData[currentIdx];
+            document.getElementById('current-index').textContent = (currentIdx + 1).toString().padStart(2, '0');
+            document.getElementById('question-text').textContent = q.question;
+            document.getElementById('progress-fill').style.width = `${((currentIdx + 1) / quizData.length) * 100}%`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const div = document.createElement('div');
+                div.className = 'option-card bg-q-bg border border-q-border p-4 rounded-xl flex items-center group';
+                div.innerHTML = `
+                    <div class="w-8 h-8 rounded border border-q-muted flex items-center justify-center mr-4 group-hover:border-q-accent text-xs font-bold text-q-muted group-hover:text-q-accent">
+                        ${String.fromCharCode(65 + index)}
+                    </div>
+                    <span class="text-q-text">${opt.text}</span>
+                `;
+                div.onclick = () => selectOption(div, opt);
+                container.appendChild(div);
+            });
+
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function selectOption(element, option) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackText = document.getElementById('feedback-text');
+            const nextBtn = document.getElementById('next-btn');
+
+            document.querySelectorAll('.option-card').forEach(card => card.classList.add('disabled'));
+
+            if (option.correct) {
+                element.classList.add('correct');
+                score++;
+                feedbackArea.className = 'mt-6 p-4 rounded-xl border border-q-accent bg-q-accent/10 animate-in fade-in';
+                feedbackText.innerHTML = `<span class="text-q-accent font-bold uppercase mr-2">¡Dominado!</span> ${option.rationale}`;
+            } else {
+                element.classList.add('incorrect');
+                feedbackArea.className = 'mt-6 p-4 rounded-xl border border-q-danger bg-q-danger/10 animate-in fade-in';
+                feedbackText.innerHTML = `<span class="text-q-danger font-bold uppercase mr-2">Fallido.</span> ${option.rationale}`;
+                
+                const options = quizData[currentIdx].options;
+                const correctIdx = options.findIndex(o => o.correct);
+                document.querySelectorAll('.option-card')[correctIdx].classList.add('correct');
+            }
+
+            document.getElementById('score-display').textContent = (score * 100);
+            feedbackArea.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < quizData.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            document.getElementById('final-score').textContent = score;
+            const percentage = (score / quizData.length) * 100;
+            document.getElementById('final-percentage').textContent = percentage + '%';
+
+            let msg = "";
+            let trophy = "";
+            
+            if(percentage === 100) {
+                msg = "¡Leyenda de las Celdas! Has alcanzado la maestría absoluta. Ningún dato se te escapará.";
+                trophy = '<i class="fa-solid fa-crown text-6xl text-q-gold animate-pulse"></i>';
+                finalRank = "LEYENDA";
+            } else if(percentage >= 80) {
+                msg = "¡Gran Maestro! Tu conocimiento de Excel es sólido y profesional. Estás listo para cualquier desafío.";
+                trophy = '<i class="fa-solid fa-trophy text-6xl text-q-gold"></i>';
+                finalRank = "MAESTRO";
+            } else if(percentage >= 60) {
+                msg = "Caballero de la Hoja. Conoces las herramientas, pero un poco más de práctica te hará invencible.";
+                trophy = '<i class="fa-solid fa-shield-halved text-6xl text-q-accent"></i>';
+                finalRank = "CABALLERO";
+            } else {
+                msg = "Aprendiz persistente. Has aprendido mucho, pero te sugiero repasar los reinos de las Funciones Lógicas.";
+                trophy = '<i class="fa-solid fa-scroll text-6xl text-q-muted"></i>';
+                finalRank = "APRENDIZ";
+                document.getElementById('cert-btn').classList.add('opacity-50', 'pointer-events-none');
+                document.getElementById('cert-btn').textContent = "PUNTUACIÓN INSUFICIENTE";
+            }
+            
+            document.getElementById('trophy-container').innerHTML = trophy;
+            document.getElementById('result-message').textContent = msg;
+        }
+
+        // Funciones del Certificado
+        function generateCertificate() {
+            document.getElementById('name-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('name-modal').style.display = 'none';
+        }
+
+        function printCertificate() {
+            const name = document.getElementById('user-name').value.trim();
+            if(!name) {
+                alert("Por favor, ingresa un nombre para el certificado.");
+                return;
+            }
+
+            document.getElementById('app').classList.add('hidden');
+            document.getElementById('name-modal').style.display = 'none';
+            document.getElementById('certificate-view').classList.remove('hidden');
+            document.getElementById('certificate-view').classList.add('flex');
+
+            document.getElementById('cert-user-name').textContent = name;
+            document.getElementById('cert-percent').textContent = (score / quizData.length * 100) + '%';
+            document.getElementById('cert-rank').textContent = finalRank;
+
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>
