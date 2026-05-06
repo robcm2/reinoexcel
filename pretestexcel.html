@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pretest: Fundamentos de Excel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        q: {
+                            bg: '#080d0b',
+                            card: '#0f1a15',
+                            border: '#1a2e24',
+                            text: '#e8f0ec',
+                            muted: '#5a7d6c',
+                            accent: '#00e676',
+                            gold: '#ffab00',
+                            danger: '#ff5252',
+                            dark: '#060a08',
+                            deep: '#0a120e'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Cinzel', 'serif'],
+                        body: ['Source Sans 3', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #080d0b;
+            color: #e8f0ec;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+
+        .font-display { font-family: 'Cinzel', serif; }
+
+        .option-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .option-card:hover:not(.disabled) {
+            background-color: #1a2e24;
+            border-color: #00e676;
+            transform: translateX(5px);
+        }
+
+        .option-card.correct {
+            background-color: rgba(0, 230, 118, 0.1);
+            border-color: #00e676;
+        }
+
+        .option-card.incorrect {
+            background-color: rgba(255, 82, 82, 0.1);
+            border-color: #ff5252;
+        }
+
+        .progress-bar {
+            transition: width 0.4s ease;
+        }
+
+        .medieval-border {
+            border: 2px solid #1a2e24;
+            position: relative;
+        }
+
+        .medieval-border::before, .medieval-border::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffab00;
+            border: 1px solid #000;
+        }
+
+        .medieval-border::before { top: -5px; left: -5px; }
+        .medieval-border::after { bottom: -5px; right: -5px; }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+
+    <div id="app" class="w-full max-w-3xl">
+        <!-- Pantalla de Inicio -->
+        <div id="start-screen" class="text-center space-y-6">
+            <div class="mb-8">
+                <i class="fa-solid fa-scroll text-5xl text-q-gold mb-4"></i>
+                <h1 class="text-4xl md:text-5xl font-display font-black text-q-gold uppercase tracking-widest">Pretest de Excel</h1>
+                <p class="text-q-muted mt-2 text-lg">Mide tu nivel antes de comenzar la aventura</p>
+            </div>
+            
+            <div class="bg-q-card border border-q-border p-6 rounded-xl text-left medieval-border">
+                <h2 class="font-display text-xl text-q-accent mb-4">Instrucciones del Pergamino:</h2>
+                <ul class="space-y-3 text-q-text">
+                    <li><i class="fa-solid fa-check text-q-gold mr-2"></i> 10 Preguntas sobre conceptos básicos.</li>
+                    <li><i class="fa-solid fa-check text-q-gold mr-2"></i> Retroalimentación inmediata.</li>
+                    <li><i class="fa-solid fa-check text-q-gold mr-2"></i> Sin tiempo límite, reflexiona cada paso.</li>
+                </ul>
+            </div>
+
+            <button onclick="startQuiz()" class="bg-q-gold hover:bg-yellow-500 text-q-bg font-display font-bold py-4 px-12 rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(255,171,0,0.3)]">
+                EMPEZAR DESAFÍO
+            </button>
+        </div>
+
+        <!-- Pantalla de Preguntas -->
+        <div id="quiz-screen" class="hidden">
+            <!-- Header de Progreso -->
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <span id="current-index" class="text-q-gold font-display text-2xl">01</span>
+                    <span class="text-q-muted font-display text-lg">/ 10</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-q-muted uppercase tracking-widest">Puntuación</span>
+                    <div id="score-display" class="text-q-accent font-display text-xl">0</div>
+                </div>
+            </div>
+
+            <div class="w-full bg-q-deep h-2 rounded-full mb-8 overflow-hidden border border-q-border">
+                <div id="progress-fill" class="progress-bar bg-q-accent h-full w-0 shadow-[0_0_10px_#00e676]"></div>
+            </div>
+
+            <!-- Pregunta -->
+            <div class="bg-q-card border border-q-border p-6 md:p-8 rounded-2xl mb-6">
+                <h2 id="question-text" class="text-xl md:text-2xl font-semibold leading-relaxed mb-8"></h2>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- Las opciones se insertan aquí -->
+                </div>
+
+                <!-- Retroalimentación -->
+                <div id="feedback-area" class="hidden mt-6 p-4 rounded-xl border animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <p id="feedback-text" class="text-sm italic"></p>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-q-accent hover:bg-green-400 text-q-bg font-display font-bold py-3 px-8 rounded-lg transition-all flex items-center">
+                    SIGUIENTE <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Resultados -->
+        <div id="result-screen" class="hidden text-center">
+            <div class="bg-q-card border-2 border-q-gold p-8 rounded-3xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-q-gold shadow-[0_0_15px_#ffab00]"></div>
+                
+                <i class="fa-solid fa-trophy text-6xl text-q-gold mb-6"></i>
+                <h2 class="text-3xl font-display font-bold mb-2">Desafío Completado</h2>
+                <p class="text-q-muted mb-8">Has medido tus conocimientos iniciales</p>
+
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-q-bg border border-q-border p-4 rounded-2xl">
+                        <div id="final-score" class="text-4xl font-bold text-q-accent">0</div>
+                        <div class="text-xs text-q-muted uppercase mt-1">Aciertos</div>
+                    </div>
+                    <div class="bg-q-bg border border-q-border p-4 rounded-2xl">
+                        <div id="final-percentage" class="text-4xl font-bold text-q-gold">0%</div>
+                        <div class="text-xs text-q-muted uppercase mt-1">Precisión</div>
+                    </div>
+                </div>
+
+                <div id="result-message" class="text-lg text-q-text mb-8 italic"></div>
+
+                <button onclick="location.reload()" class="btn-primary border-2 border-q-accent text-q-accent hover:bg-q-accent hover:text-q-bg font-display font-bold py-3 px-10 rounded-full transition-all">
+                    REINTENTAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "¿Cuál es la principal diferencia entre una 'Fila' y una 'Columna' en una hoja de cálculo?",
+                options: [
+                    { text: "Las filas se identifican con letras y las columnas con números.", correct: false, rationale: "En realidad, es al revés: las columnas usan letras y las filas usan números." },
+                    { text: "Las filas son horizontales (números) y las columnas son verticales (letras).", correct: true, rationale: "Esta es la estructura básica de la cuadrícula de Excel." },
+                    { text: "No hay diferencia, ambos términos son intercambiables.", correct: false, rationale: "Tienen orientaciones y sistemas de identificación distintos." },
+                    { text: "Las columnas contienen fórmulas y las filas contienen solo texto.", correct: false, rationale: "Cualquier celda puede contener cualquier tipo de dato." }
+                ],
+                hint: "Observa los bordes superior (letras) e izquierdo (números)."
+            },
+            {
+                question: "Para que Excel reconozca que estás escribiendo una fórmula, ¿con qué símbolo debes empezar siempre?",
+                options: [
+                    { text: "Símbolo de suma (+)", correct: false, rationale: "No es el estándar oficial para iniciar funciones." },
+                    { text: "Símbolo de asterisco (*)", correct: false, rationale: "Se usa para multiplicar, no para iniciar la fórmula." },
+                    { text: "Símbolo de igual (=)", correct: true, rationale: "El signo igual activa el motor de cálculo de la celda." },
+                    { text: "Símbolo de paréntesis ( )", correct: false, rationale: "Se usan dentro de las fórmulas, no al inicio." }
+                ]
+            },
+            {
+                question: "Si tienes valores en A1, A2 y A3, ¿cuál es la forma más eficiente de sumarlos?",
+                options: [
+                    { text: "=A1+A2+A3", correct: false, rationale: "Válido, pero no es una 'función' de rango eficiente." },
+                    { text: "=SUMA(A1:A3)", correct: true, rationale: "Es la forma estándar y profesional de sumar rangos." },
+                    { text: "=A1:A3", correct: false, rationale: "Esto es solo una referencia de rango, no una operación." },
+                    { text: "=TOTAL(A1,A3)", correct: false, rationale: "La función TOTAL no existe para sumas básicas." }
+                ]
+            },
+            {
+                question: "¿Qué sucede si haces doble clic en el borde derecho del encabezado de una columna?",
+                options: [
+                    { text: "Se elimina la columna completa.", correct: false, rationale: "Eliminar requiere acciones de menú o teclado." },
+                    { text: "La columna se ajusta automáticamente al contenido más ancho.", correct: true, rationale: "Se conoce como Autoajuste." },
+                    { text: "Se oculta la columna.", correct: false, rationale: "Ocultar se hace arrastrando o por menú contextual." },
+                    { text: "Se cambia el color de fondo.", correct: false, rationale: "Los colores se gestionan en la pestaña Inicio." }
+                ]
+            },
+            {
+                question: "¿Para qué sirve el 'Controlador de Relleno' (pequeño cuadro verde en la esquina de la celda)?",
+                options: [
+                    { text: "Para copiar contenido o extender series.", correct: true, rationale: "Permite arrastrar datos lógicos o fórmulas rápidamente." },
+                    { text: "Para bloquear la celda.", correct: false, rationale: "El bloqueo se hace en la pestaña Revisar." },
+                    { text: "Para cambiar el tamaño de fuente.", correct: false, rationale: "Se ajusta en el grupo Fuente de la cinta." },
+                    { text: "Para insertar un comentario.", correct: false, rationale: "Se hace con clic derecho o Shift+F2." }
+                ]
+            },
+            {
+                question: "¿Qué representa el error #¡VALOR! en una celda?",
+                options: [
+                    { text: "División entre cero.", correct: false, rationale: "Ese es #¡DIV/0!." },
+                    { text: "Error en tipo de argumento (ej. sumar texto con número).", correct: true, rationale: "Ocurre al usar datos incompatibles en una operación." },
+                    { text: "Columna demasiado estrecha.", correct: false, rationale: "Muestra ##### en su lugar." },
+                    { text: "La función no existe.", correct: false, rationale: "Ese es el error #¿NOMBRE?." }
+                ]
+            },
+            {
+                question: "En una fórmula, ¿qué significa la referencia $A$1?",
+                options: [
+                    { text: "Es una referencia relativa.", correct: false, rationale: "Las relativas no llevan símbolos de dólar." },
+                    { text: "Es una referencia absoluta que no cambia al copiar.", correct: true, rationale: "El $ 'ancla' la posición de la celda." },
+                    { text: "Es una referencia a otra hoja.", correct: false, rationale: "Esas requieren el nombre de la hoja y un '!'." },
+                    { text: "Es un formato de moneda.", correct: false, rationale: "En fórmulas, el $ tiene función lógica de fijación." }
+                ]
+            },
+            {
+                question: "¿Cuál es la función para encontrar el valor más alto?",
+                options: [
+                    { text: "=ALTO(rango)", correct: false, rationale: "No existe esa función en Excel estándar." },
+                    { text: "=MAX(rango)", correct: true, rationale: "Devuelve el valor máximo de un conjunto." },
+                    { text: "=GRANDE(rango)", correct: false, rationale: "No es la función para el máximo simple." },
+                    { text: "=PROM(rango)", correct: false, rationale: "Calcula el promedio, no el máximo." }
+                ]
+            },
+            {
+                question: "¿Qué herramienta usarías para que una celda cambie de color según su valor?",
+                options: [
+                    { text: "Validación de Datos", correct: false, rationale: "Sirve para restringir la entrada de datos." },
+                    { text: "Formato Condicional", correct: true, rationale: "Aplica formatos basados en reglas lógicas." },
+                    { text: "Filtro Rápido", correct: false, rationale: "Sirve para mostrar u ocultar filas." },
+                    { text: "Estilos de Celda", correct: false, rationale: "Son formatos estáticos manuales." }
+                ]
+            },
+            {
+                question: "¿Cómo se llama el archivo de Excel que contiene hojas?",
+                options: [
+                    { text: "Documento", correct: false, rationale: "Término usual para Word." },
+                    { text: "Libro", correct: true, rationale: "Es la unidad de archivo que agrupa hojas de cálculo." },
+                    { text: "Carpeta", correct: false, rationale: "Es un contenedor del sistema operativo." },
+                    { text: "Presentación", correct: false, rationale: "Término para PowerPoint." }
+                ]
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            canAnswer = true;
+            const q = quizData[currentIdx];
+            document.getElementById('current-index').textContent = (currentIdx + 1).toString().padStart(2, '0');
+            document.getElementById('question-text').textContent = q.question;
+            document.getElementById('progress-fill').style.width = `${((currentIdx + 1) / quizData.length) * 100}%`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const div = document.createElement('div');
+                div.className = 'option-card bg-q-bg border border-q-border p-4 rounded-xl flex items-center group';
+                div.innerHTML = `
+                    <div class="w-8 h-8 rounded border border-q-muted flex items-center justify-center mr-4 group-hover:border-q-accent text-xs font-bold text-q-muted group-hover:text-q-accent">
+                        ${String.fromCharCode(65 + index)}
+                    </div>
+                    <span class="text-q-text">${opt.text}</span>
+                `;
+                div.onclick = () => selectOption(div, opt);
+                container.appendChild(div);
+            });
+
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function selectOption(element, option) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackText = document.getElementById('feedback-text');
+            const nextBtn = document.getElementById('next-btn');
+
+            // Deshabilitar otros clics visualmente
+            document.querySelectorAll('.option-card').forEach(card => card.classList.add('disabled'));
+
+            if (option.correct) {
+                element.classList.add('correct');
+                score++;
+                feedbackArea.className = 'mt-6 p-4 rounded-xl border border-q-accent bg-q-accent/10 animate-in fade-in';
+                feedbackText.innerHTML = `<span class="text-q-accent font-bold uppercase mr-2">¡Correcto!</span> ${option.rationale}`;
+            } else {
+                element.classList.add('incorrect');
+                feedbackArea.className = 'mt-6 p-4 rounded-xl border border-q-danger bg-q-danger/10 animate-in fade-in';
+                feedbackText.innerHTML = `<span class="text-q-danger font-bold uppercase mr-2">Incorrecto.</span> ${option.rationale}`;
+                
+                // Mostrar la correcta
+                const options = quizData[currentIdx].options;
+                const correctIdx = options.findIndex(o => o.correct);
+                document.querySelectorAll('.option-card')[correctIdx].classList.add('correct');
+            }
+
+            document.getElementById('score-display').textContent = score;
+            feedbackArea.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < quizData.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            document.getElementById('final-score').textContent = score;
+            const percentage = (score / quizData.length) * 100;
+            document.getElementById('final-percentage').textContent = percentage + '%';
+
+            let msg = "";
+            if(percentage === 100) msg = "¡Maestría absoluta! Estás más que listo para los niveles avanzados.";
+            else if(percentage >= 70) msg = "¡Excelente base! El curso 'Excel Quest' te ayudará a pulir los detalles.";
+            else if(percentage >= 40) msg = "Buen comienzo, pero hay reinos que aún no dominas. ¡Aprenderás mucho en esta aventura!";
+            else msg = "No te preocupes, noble aprendiz. El camino del dominio de Excel comienza hoy mismo.";
+            
+            document.getElementById('result-message').textContent = msg;
+        }
+    </script>
+</body>
+
+</html>
